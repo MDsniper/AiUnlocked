@@ -10,8 +10,32 @@ Since you are using **Dokploy**, deployment becomes much simpler! Dokploy can di
 ## 1. Push Code to GitHub
 Ensure you have pushed your latest code (including `Dockerfile`, `Dockerfile.backend`, and `docker-compose.yml`) to a private or public repository.
 
-## 2. Deploy in Dokploy (Compose Method)
-The easiest way to deploy this full stack is using Dokploy's **Compose** feature.
+## 2a. Deploy via "Application" (Railpack/Nixpacks)
+If you prefer to deploy as a single **Application** in Dokploy (using Railpack/Nixpacks):
+
+1.  **Create Application**:
+    -   Go to your Project -> **Application**.
+    -   Click **"Create Application"**.
+    -   Select your **GitHub Repository**.
+    -   Branch: `main`.
+    -   Build Type: **Nixpacks** (or Dockerfile).
+
+2.  **Configuration**:
+    -   Dokploy/Nixpacks will automatically detect `package.json`.
+    -   It will run `npm run build` and then start the app using `npm start`.
+    -   **Important**: Set your Environment Variables in the "Environment" tab (copy from `.env`), especially `VITE_API_URL`.
+
+3.  **Port**:
+    -   In the "General" or "Network" tab, ensure the internal port is set to `3001` (this is where our server listens).
+
+4.  **Domain**:
+    -   Map your domain (e.g., `app.yourdomain.com`) to valid port `3001`.
+
+This method runs the Backend and Frontend in a **single container**.
+
+## 2b. Deploy via "Compose" (Docker - Recommended)
+The alternative (and often more robust) method is using Docker Compose as described below.
+
 
 1.  **Open Dokploy Dashboard**.
 2.  Go to your Project -> **Compose** tab.

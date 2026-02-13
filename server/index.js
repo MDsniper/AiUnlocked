@@ -15,6 +15,12 @@ const DB_FILE = path.join(__dirname, 'db.json');
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from the React app
+const distPath = path.join(__dirname, '../dist');
+if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+}
+
 // Initialize DB if not exists
 if (!fs.existsSync(DB_FILE)) {
     // Initial empty structure
@@ -59,6 +65,16 @@ app.post('/api/listings', (req, res) => {
         res.status(201).json(newListing);
     } catch (e) {
         res.status(500).json({ error: e.message });
+    }
+});
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get(/(.*)/, (req, res) => {
+    if (fs.existsSync(path.join(distPath, 'index.html'))) {
+        res.sendFile(path.join(distPath, 'index.html'));
+    } else {
+        res.status(404).send('Client not built');
     }
 });
 
