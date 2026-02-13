@@ -188,9 +188,48 @@ app.get('/api/sources', (req, res) => {
     });
 });
 
+// ─── Listmonk Integration ───────────────────────────────────────────
+
+const LISTMONK_URL = process.env.LISTMONK_URL || 'https://mail.aiunlocked.xyz';
+const LISTMONK_USER = process.env.LISTMONK_USER || 'admin';
+const LISTMONK_PASS = process.env.LISTMONK_PASS || 'AiUnlocked2026!';
+const LISTMONK_NEWSLETTER_LIST_ID = parseInt(process.env.LISTMONK_NEWSLETTER_LIST_ID || '3');
+
+async function addToListmonk(email, name, listIds) {
+    try {
+        const auth = Buffer.from(`${LISTMONK_USER}:${LISTMONK_PASS}`).toString('base64');
+        const res = await fetch(`${LISTMONK_URL}/api/subscribers`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${auth}`,
+            },
+            body: JSON.stringify({
+                email,
+                name: name || email.split('@')[0],
+                status: 'enabled',
+                lists: listIds,
+                preconfirm_subscriptions: true,
+            }),
+        });
+        const data = await res.json();
+        if (!res.ok && data.message?.includes('already exists')) {
+            console.log('Listmonk: subscriber already exists:', email);
+            return;
+        }
+        if (!res.ok) {
+            console.error('Listmonk error:', data.message);
+            return;
+        }
+        console.log('Listmonk: added subscriber:', email);
+    } catch (err) {
+        console.error('Listmonk sync failed:', err.message);
+    }
+}
+
 // ─── Newsletter Endpoint ────────────────────────────────────────────
 
-app.post('/api/newsletter', (req, res) => {
+app.post('/api/newsletter', async (req, res) => {
     const { email } = req.body;
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return res.status(400).json({ error: 'Valid email is required' });
@@ -207,6 +246,10 @@ app.post('/api/newsletter', (req, res) => {
 
     subscribers.push({ email, subscribedAt: new Date().toISOString() });
     fs.writeFileSync(SUBSCRIBERS_FILE, JSON.stringify(subscribers, null, 2));
+
+    // Sync to Listmonk
+    addToListmonk(email, '', [LISTMONK_NEWSLETTER_LIST_ID]);
+
     res.status(201).json({ message: 'Subscribed successfully' });
 });
 
