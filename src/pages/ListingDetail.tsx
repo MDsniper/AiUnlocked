@@ -1,12 +1,23 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Star, Calendar, Tag, Globe, DollarSign } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Star, Calendar, Tag, Globe, DollarSign, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader } from '../components/ui/Card';
-import { listings, categories } from '../data/mockData';
+import { categories } from '../data/mockData';
+import { useListings } from '../hooks/useListings';
 
 export const ListingDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { listings, loading } = useListings();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-goose-down flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-coffee" />
+      </div>
+    );
+  }
+
   const listing = listings.find(l => l.id === id);
   const category = listing ? categories.find(c => c.id === listing.category) : null;
 

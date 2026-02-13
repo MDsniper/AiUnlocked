@@ -42,11 +42,10 @@ export const Header: React.FC<HeaderProps> = ({ onSubmitClick }) => {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`text-sm font-medium transition-colors ${
-                  isActive(item.href)
-                    ? 'text-chocolate'
-                    : 'text-cocoa hover:text-chocolate'
-                }`}
+                className={`text-sm font-medium transition-colors ${isActive(item.href)
+                  ? 'text-chocolate'
+                  : 'text-cocoa hover:text-chocolate'
+                  }`}
               >
                 {item.name}
               </Link>
@@ -77,11 +76,10 @@ export const Header: React.FC<HeaderProps> = ({ onSubmitClick }) => {
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`block px-3 py-2 text-base font-medium rounded-md transition-colors ${
-                    isActive(item.href)
-                      ? 'text-chocolate bg-dark-cream'
-                      : 'text-cocoa hover:text-chocolate hover:bg-dark-cream'
-                  }`}
+                  className={`block px-3 py-2 text-base font-medium rounded-md transition-colors ${isActive(item.href)
+                    ? 'text-chocolate bg-dark-cream'
+                    : 'text-cocoa hover:text-chocolate hover:bg-dark-cream'
+                    }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}

@@ -1,12 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search, Filter, Star, ArrowRight } from 'lucide-react';
+import { Search, Filter, Star, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
-import { listings, categories } from '../data/mockData';
+import { categories } from '../data/mockData';
+import { useListings } from '../hooks/useListings';
 
 export const Categories: React.FC = () => {
+  const { listings, loading } = useListings();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
@@ -51,7 +53,7 @@ export const Categories: React.FC = () => {
     }
 
     return filtered;
-  }, [searchQuery, selectedCategory, selectedPricing, sortBy]);
+  }, [listings, searchQuery, selectedCategory, selectedPricing, sortBy]);
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -138,11 +140,10 @@ export const Categories: React.FC = () => {
               <button
                 key={option.value}
                 onClick={() => setSortBy(option.value)}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  sortBy === option.value
-                    ? 'bg-chocolate text-goose-down'
-                    : 'text-cocoa hover:bg-dark-cream'
-                }`}
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${sortBy === option.value
+                  ? 'bg-chocolate text-goose-down'
+                  : 'text-cocoa hover:bg-dark-cream'
+                  }`}
               >
                 {option.label}
               </button>
@@ -161,75 +162,80 @@ export const Categories: React.FC = () => {
         </div>
 
         {/* Listings Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredListings.map((listing) => (
-            <Card key={listing.id} hover className="h-full overflow-hidden">
-              <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
-                <img
-                  src={listing.image}
-                  alt={listing.title}
-                  className="w-full h-full object-cover"
-                />
-                {listing.featured && (
-                  <div className="absolute top-3 left-3 bg-chocolate text-goose-down px-2 py-1 text-xs font-medium rounded-md">
-                    Featured
-                  </div>
-                )}
-                <div className="absolute top-3 right-3">
-                  <span className={`px-2 py-1 text-xs font-medium rounded-md ${
-                    listing.pricing === 'Free' ? 'bg-fresh-hay text-chocolate' :
-                    listing.pricing === 'Freemium' ? 'bg-lavender text-chocolate' :
-                    listing.pricing === 'Paid' ? 'bg-dark-cream text-chocolate' :
-                    'bg-dark-cream text-chocolate'
-                  }`}>
-                    {listing.pricing}
-                  </span>
-                </div>
-              </div>
-
-              <CardContent className="p-6">
-                <div className="mb-3">
-                  <h3 className="text-lg font-semibold text-chocolate mb-2">
-                    {listing.title}
-                  </h3>
-                  <p className="text-cocoa text-sm line-clamp-2 leading-relaxed">
-                    {listing.description}
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                  {listing.tags.slice(0, 2).map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-1 border border-dark-cream text-cocoa text-xs rounded-md"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {listing.tags.length > 2 && (
-                    <span className="px-2 py-1 border border-dark-cream text-cocoa text-xs rounded-md">
-                      +{listing.tags.length - 2}
-                    </span>
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-coffee" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredListings.map((listing) => (
+              <Card key={listing.id} hover className="h-full overflow-hidden">
+                <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
+                  <img
+                    src={listing.image}
+                    alt={listing.title}
+                    className="w-full h-full object-cover"
+                  />
+                  {listing.featured && (
+                    <div className="absolute top-3 left-3 bg-chocolate text-goose-down px-2 py-1 text-xs font-medium rounded-md">
+                      Featured
+                    </div>
                   )}
+                  <div className="absolute top-3 right-3">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-md ${listing.pricing === 'Free' ? 'bg-fresh-hay text-chocolate' :
+                        listing.pricing === 'Freemium' ? 'bg-lavender text-chocolate' :
+                          listing.pricing === 'Paid' ? 'bg-dark-cream text-chocolate' :
+                            'bg-dark-cream text-chocolate'
+                      }`}>
+                      {listing.pricing}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-dark-cream">
-                  <div className="flex items-center space-x-1">
-                    <Star size={14} className="text-coffee fill-current" />
-                    <span className="text-sm font-medium text-chocolate">{listing.rating}</span>
-                    <span className="text-sm text-cocoa">({listing.reviews})</span>
+                <CardContent className="p-6">
+                  <div className="mb-3">
+                    <h3 className="text-lg font-semibold text-chocolate mb-2">
+                      {listing.title}
+                    </h3>
+                    <p className="text-cocoa text-sm line-clamp-2 leading-relaxed">
+                      {listing.description}
+                    </p>
                   </div>
-                  <Link
-                    to={`/listing/${listing.id}`}
-                    className="text-coffee hover:text-chocolate text-sm flex items-center"
-                  >
-                    View <ArrowRight size={14} className="ml-1" />
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {listing.tags.slice(0, 2).map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-1 border border-dark-cream text-cocoa text-xs rounded-md"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    {listing.tags.length > 2 && (
+                      <span className="px-2 py-1 border border-dark-cream text-cocoa text-xs rounded-md">
+                        +{listing.tags.length - 2}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-dark-cream">
+                    <div className="flex items-center space-x-1">
+                      <Star size={14} className="text-coffee fill-current" />
+                      <span className="text-sm font-medium text-chocolate">{listing.rating}</span>
+                      <span className="text-sm text-cocoa">({listing.reviews})</span>
+                    </div>
+                    <Link
+                      to={`/listing/${listing.id}`}
+                      className="text-coffee hover:text-chocolate text-sm flex items-center"
+                    >
+                      View <ArrowRight size={14} className="ml-1" />
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* No Results */}
         {filteredListings.length === 0 && (
