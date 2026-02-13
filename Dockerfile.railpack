@@ -1,0 +1,23 @@
+# Start with the official Railpack image
+FROM ghcr.io/railwayapp/railpack:latest
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build the frontend
+RUN npm run build
+
+# Expose the internal port
+EXPOSE 3001
+
+# Start the server (using the script we added)
+CMD ["npm", "start"]

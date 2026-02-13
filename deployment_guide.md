@@ -10,28 +10,30 @@ Since you are using **Dokploy**, deployment becomes much simpler! Dokploy can di
 ## 1. Push Code to GitHub
 Ensure you have pushed your latest code (including `Dockerfile`, `Dockerfile.backend`, and `docker-compose.yml`) to a private or public repository.
 
-## 2a. Deploy via "Application" (Railpack/Nixpacks)
-If you prefer to deploy as a single **Application** in Dokploy (using Railpack/Nixpacks):
+## 2a. Deploy via "Application" (Railpack Dockerfile)
+Since you specifically want to use **Railpack**, we will use the custom `Dockerfile.railpack` I created.
 
 1.  **Create Application**:
     -   Go to your Project -> **Application**.
     -   Click **"Create Application"**.
     -   Select your **GitHub Repository**.
     -   Branch: `main`.
-    -   Build Type: **Nixpacks** (or Dockerfile).
+    -   Build Type: **Dockerfile**.
 
 2.  **Configuration**:
-    -   Dokploy/Nixpacks will automatically detect `package.json`.
-    -   It will run `npm run build` and then start the app using `npm start`.
-    -   **Important**: Set your Environment Variables in the "Environment" tab (copy from `.env`), especially `VITE_API_URL`.
+    -   **Context Path**: `/`
+    -   **Dockerfile Path**: `/Dockerfile.railpack` (Select the specific railpack file).
+    -   **Environment Variables**:
+        -   Copy from `.env`.
+        -   Set `VITE_API_URL=https://your-domain.com/api`.
 
 3.  **Port**:
-    -   In the "General" or "Network" tab, ensure the internal port is set to `3001` (this is where our server listens).
+    -   Set internal port to `3001`.
 
 4.  **Domain**:
-    -   Map your domain (e.g., `app.yourdomain.com`) to valid port `3001`.
+    -   Add your domain and enable HTTPS.
 
-This method runs the Backend and Frontend in a **single container**.
+This will build your app using the `ghcr.io/railwayapp/railpack` base image.
 
 ## 2b. Deploy via "Compose" (Docker - Recommended)
 The alternative (and often more robust) method is using Docker Compose as described below.
