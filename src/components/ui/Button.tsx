@@ -13,13 +13,13 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium transition-colors duration-150 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coffee disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'inline-flex items-center justify-center font-medium transition-colors duration-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]/50 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variants = {
-    primary: 'bg-coffee text-goose-down hover:bg-cinnamon',
-    secondary: 'bg-dark-cream text-chocolate hover:bg-fresh-hay',
-    outline: 'border border-dark-cream text-chocolate hover:bg-dark-cream',
-    ghost: 'text-cocoa hover:text-chocolate hover:bg-dark-cream'
+    primary: 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]',
+    secondary: 'bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--border)]',
+    outline: 'border border-[var(--border)] text-[var(--muted)] hover:bg-[var(--surface)]',
+    ghost: 'text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface)]'
   };
 
   const sizes = {

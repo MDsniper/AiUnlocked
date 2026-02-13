@@ -37,7 +37,7 @@ export const SubmitListingForm: React.FC<SubmitListingFormProps> = ({
     if (!formData.website.trim()) newErrors.website = 'Website URL is required';
     if (!formData.pricing) newErrors.pricing = 'Pricing model is required';
     if (!formData.contactEmail.trim()) newErrors.contactEmail = 'Contact email is required';
-    
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.contactEmail && !emailRegex.test(formData.contactEmail)) {
       newErrors.contactEmail = 'Please enter a valid email address';
@@ -83,12 +83,12 @@ export const SubmitListingForm: React.FC<SubmitListingFormProps> = ({
         />
 
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">Category</label>
+          <label className="block text-sm font-medium text-[var(--text)]">Category</label>
           <select
             value={formData.category}
             onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-            className={`block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-              errors.category ? 'border-red-500' : ''
+            className={`block w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--card-bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] ${
+              errors.category ? 'border-red-400' : ''
             }`}
           >
             <option value="">Select a category</option>
@@ -96,7 +96,7 @@ export const SubmitListingForm: React.FC<SubmitListingFormProps> = ({
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
-          {errors.category && <p className="text-sm text-red-600">{errors.category}</p>}
+          {errors.category && <p className="text-sm text-red-500">{errors.category}</p>}
         </div>
       </div>
 
@@ -110,40 +110,40 @@ export const SubmitListingForm: React.FC<SubmitListingFormProps> = ({
       />
 
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-gray-700">Short Description</label>
+        <label className="block text-sm font-medium text-[var(--text)]">Short Description</label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
           rows={3}
-          className={`block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-            errors.description ? 'border-red-500' : ''
+          className={`block w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--card-bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] ${
+            errors.description ? 'border-red-400' : ''
           }`}
           placeholder="Brief description of what this tool does..."
         />
-        {errors.description && <p className="text-sm text-red-600">{errors.description}</p>}
+        {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
       </div>
 
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-gray-700">Detailed Description</label>
+        <label className="block text-sm font-medium text-[var(--text)]">Detailed Description</label>
         <textarea
           value={formData.longDescription}
           onChange={(e) => setFormData(prev => ({ ...prev, longDescription: e.target.value }))}
           rows={5}
-          className={`block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-            errors.longDescription ? 'border-red-500' : ''
+          className={`block w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--card-bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] ${
+            errors.longDescription ? 'border-red-400' : ''
           }`}
           placeholder="Provide a comprehensive description including features, use cases, and benefits..."
         />
-        {errors.longDescription && <p className="text-sm text-red-600">{errors.longDescription}</p>}
+        {errors.longDescription && <p className="text-sm text-red-500">{errors.longDescription}</p>}
       </div>
 
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-gray-700">Pricing Model</label>
+        <label className="block text-sm font-medium text-[var(--text)]">Pricing Model</label>
         <select
           value={formData.pricing}
           onChange={(e) => setFormData(prev => ({ ...prev, pricing: e.target.value }))}
-          className={`block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-            errors.pricing ? 'border-red-500' : ''
+          className={`block w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--card-bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] ${
+            errors.pricing ? 'border-red-400' : ''
           }`}
         >
           <option value="">Select pricing model</option>
@@ -152,11 +152,11 @@ export const SubmitListingForm: React.FC<SubmitListingFormProps> = ({
           <option value="Paid">Paid</option>
           <option value="Enterprise">Enterprise</option>
         </select>
-        {errors.pricing && <p className="text-sm text-red-600">{errors.pricing}</p>}
+        {errors.pricing && <p className="text-sm text-red-500">{errors.pricing}</p>}
       </div>
 
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-gray-700">Tags</label>
+        <label className="block text-sm font-medium text-[var(--text)]">Tags</label>
         <div className="flex space-x-2">
           <input
             type="text"
@@ -164,7 +164,7 @@ export const SubmitListingForm: React.FC<SubmitListingFormProps> = ({
             onChange={(e) => setTagInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
             placeholder="Add tags..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="flex-1 px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--card-bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)]"
           />
           <Button type="button" onClick={addTag} variant="outline" size="sm">
             Add
@@ -175,15 +175,15 @@ export const SubmitListingForm: React.FC<SubmitListingFormProps> = ({
             {formData.tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full"
+                className="inline-flex items-center px-3 py-1 bg-[var(--accent)]/10 text-[var(--accent)] text-sm rounded-full"
               >
                 {tag}
                 <button
                   type="button"
                   onClick={() => removeTag(tag)}
-                  className="ml-2 text-purple-600 hover:text-purple-800"
+                  className="ml-2 text-[var(--accent)] hover:text-[var(--accent-hover)]"
                 >
-                  ×
+                  x
                 </button>
               </span>
             ))}

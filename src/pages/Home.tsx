@@ -1,179 +1,108 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Star, TrendingUp, Zap, Search, Filter, Loader2 } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { Card, CardContent } from '../components/ui/Card';
-import { categories } from '../data/mockData';
-import { useListings } from '../hooks/useListings';
+import { Newspaper, ArrowRight } from 'lucide-react';
+import { fetchNews } from '../services/newsApi';
+import type { Article, ArticleCategory, NewsResponse } from '../types';
+import { FeaturedArticle } from '../components/news/FeaturedArticle';
+import { ArticleFeed } from '../components/news/ArticleFeed';
+import { CategoryFilter } from '../components/news/CategoryFilter';
+import { SearchBar } from '../components/news/SearchBar';
+import { Pagination } from '../components/ui/Pagination';
 
 export const Home: React.FC = () => {
-  const { listings, loading } = useListings();
-  const featuredListings = listings.filter(listing => listing.featured);
-  const topCategories = categories.slice(0, 6);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [featured, setFeatured] = useState<Article | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [category, setCategory] = useState<ArticleCategory | null>(null);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    setPage(1);
+  }, [category, search]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    fetchNews(page, 20, category ?? undefined, search || undefined)
+      .then((data: NewsResponse) => {
+        if (cancelled) return;
+        if (page === 1 && !category && !search && data.articles.length > 0) {
+          setFeatured(data.articles[0]);
+          setArticles(data.articles.slice(1));
+        } else {
+          setFeatured(null);
+          setArticles(data.articles);
+        }
+        setTotalPages(data.totalPages);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [page, category, search]);
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="bg-goose-down border-b border-dark-cream">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 text-chocolate tracking-tight">
-              Discover AI Tools
+      {/* Hero */}
+      <section className="border-b border-[var(--border)]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="flex items-center gap-3 mb-4">
+            <Newspaper className="text-[var(--accent)]" size={28} />
+            <h1 className="text-4xl md:text-5xl font-bold text-[var(--text)] tracking-tight">
+              AI News
             </h1>
-            <p className="text-xl md:text-2xl mb-10 text-cocoa leading-relaxed max-w-3xl mx-auto">
-              Find, compare, and unlock the perfect AI tools for your workflow.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link to="/categories">
-                <Button size="lg">
-                  Explore Tools
-                </Button>
-              </Link>
-              <Link to="/categories">
-                <Button variant="outline" size="lg">
-                  View All Categories
-                </Button>
-              </Link>
-            </div>
           </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-16 bg-goose-down border-b border-dark-cream">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="text-center">
-              <div className="text-5xl font-bold text-chocolate mb-3">{listings.length}+</div>
-              <div className="text-base text-cocoa">AI Tools Listed</div>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold text-chocolate mb-3">25K+</div>
-              <div className="text-base text-cocoa">Monthly Users</div>
-            </div>
-            <div className="text-center">
-              <div className="text-5xl font-bold text-chocolate mb-3">98%</div>
-              <div className="text-base text-cocoa">User Satisfaction</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Tools */}
-      <section className="py-20 bg-goose-down">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-16">
-            <h2 className="text-4xl font-bold text-chocolate mb-4">
-              Featured Tools
-            </h2>
-            <p className="text-lg text-cocoa">
-              Handpicked tools that are transforming workflows
-            </p>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-coffee" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredListings.map((listing) => (
-                <Card key={listing.id} hover className="h-full overflow-hidden">
-                  <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
-                    <img
-                      src={listing.image}
-                      alt={listing.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-chocolate">
-                        {listing.title}
-                      </h3>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-md ${listing.pricing === 'Free' ? 'bg-fresh-hay text-chocolate' :
-                          listing.pricing === 'Freemium' ? 'bg-lavender text-chocolate' :
-                            listing.pricing === 'Paid' ? 'bg-dark-cream text-chocolate' :
-                              'bg-dark-cream text-cocoa'
-                        }`}>
-                        {listing.pricing}
-                      </span>
-                    </div>
-
-                    <p className="text-cocoa text-sm mb-4 line-clamp-2 leading-relaxed">
-                      {listing.description}
-                    </p>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-dark-cream">
-                      <div className="flex items-center space-x-1">
-                        <Star size={14} className="text-coffee fill-current" />
-                        <span className="text-sm font-medium text-chocolate">{listing.rating}</span>
-                        <span className="text-sm text-cocoa">({listing.reviews})</span>
-                      </div>
-                      <Link
-                        to={`/listing/${listing.id}`}
-                        className="text-coffee hover:text-chocolate text-sm flex items-center"
-                      >
-                        View <ArrowRight size={14} className="ml-1" />
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Categories */}
-      <section className="py-20 bg-goose-down border-t border-dark-cream">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-16">
-            <h2 className="text-4xl font-bold text-chocolate mb-4">
-              Browse by Category
-            </h2>
-            <p className="text-lg text-cocoa">
-              Find AI tools organized by use case
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {topCategories.map((category) => (
-              <Link key={category.id} to={`/categories?category=${category.id}`}>
-                <Card hover className="p-8">
-                  <div className="text-3xl mb-4">{category.icon}</div>
-                  <h3 className="text-lg font-semibold text-chocolate mb-2">
-                    {category.name}
-                  </h3>
-                  <p className="text-cocoa mb-3 text-sm leading-relaxed">
-                    {category.description}
-                  </p>
-                  <div className="text-coffee text-sm font-medium">
-                    {category.count} tools
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-chocolate border-t border-cocoa">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold mb-5 text-goose-down">
-            Ready to Get Started?
-          </h2>
-          <p className="text-lg mb-10 text-dark-cream">
-            Join thousands discovering their perfect AI tools
+          <p className="text-lg text-[var(--muted)] max-w-2xl">
+            Stay up to date with the latest in artificial intelligence — research, tools, policy, and industry news.
           </p>
-          <Link to="/categories">
-            <Button size="lg" className="bg-goose-down text-chocolate hover:bg-dark-cream">
-              Start Exploring
-            </Button>
-          </Link>
         </div>
       </section>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Featured */}
+        {featured && !loading && (
+          <div className="mb-10">
+            <FeaturedArticle article={featured} />
+          </div>
+        )}
+
+        {/* Filters */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="flex-1">
+            <CategoryFilter selected={category} onChange={setCategory} />
+          </div>
+          <div className="w-full md:w-72">
+            <SearchBar value={search} onChange={setSearch} />
+          </div>
+        </div>
+
+        {/* Feed */}
+        <ArticleFeed articles={articles} loading={loading} error={error} />
+
+        {/* Pagination */}
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+
+        {/* Newsletter CTA */}
+        <section className="mt-16 rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-10 text-center">
+          <h2 className="text-2xl font-bold text-[var(--text)] mb-3">Never miss an AI breakthrough</h2>
+          <p className="text-[var(--muted)] mb-6">Get the top stories delivered to your inbox weekly.</p>
+          <Link
+            to="/newsletter"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-xl font-medium transition-colors"
+          >
+            Subscribe <ArrowRight size={16} />
+          </Link>
+        </section>
+      </div>
     </div>
   );
 };

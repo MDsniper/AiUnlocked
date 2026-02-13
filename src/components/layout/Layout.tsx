@@ -4,13 +4,12 @@ import { Footer } from './Footer';
 
 interface LayoutProps {
   children: React.ReactNode;
-  onSubmitClick: () => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, onSubmitClick }) => {
+export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header onSubmitClick={onSubmitClick} />
+    <div className="min-h-screen bg-[var(--bg)] flex flex-col text-[var(--text)]">
+      <Header />
       <main className="flex-1">
         {children}
       </main>
