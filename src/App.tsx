@@ -8,6 +8,9 @@ import { CategoryDetail } from './pages/CategoryDetail';
 import { ArticleView } from './pages/ArticleView';
 import { About } from './pages/About';
 import { Newsletter } from './pages/Newsletter';
+import { JobBoard } from './pages/JobBoard';
+import { JobDetail } from './pages/JobDetail';
+import { JobPost } from './pages/JobPost';
 
 function App() {
   return (
@@ -19,6 +22,9 @@ function App() {
           <Route path="/categories" element={<Categories />} />
           <Route path="/categories/:slug" element={<CategoryDetail />} />
           <Route path="/article/:id" element={<ArticleView />} />
+          <Route path="/jobs" element={<JobBoard />} />
+          <Route path="/jobs/post" element={<JobPost />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/about" element={<About />} />
           <Route path="/newsletter" element={<Newsletter />} />
         </Routes>

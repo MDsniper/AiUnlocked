@@ -6,6 +6,7 @@ import { ThemeSwitcher } from '../ui/ThemeSwitcher';
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'Categories', href: '/categories' },
+  { name: 'Jobs', href: '/jobs' },
   { name: 'About', href: '/about' },
   { name: 'Newsletter', href: '/newsletter' },
 ];

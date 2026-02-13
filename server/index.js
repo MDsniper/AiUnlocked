@@ -13,6 +13,8 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const DB_FILE = path.join(__dirname, 'db.json');
 const SUBSCRIBERS_FILE = path.join(__dirname, 'newsletter_subscribers.json');
+const JOBS_FILE = path.join(__dirname, 'jobs.json');
+const ADMIN_KEY = process.env.ADMIN_KEY || 'aiunlocked-admin-2026';
 
 app.use(cors());
 app.use(express.json());
@@ -26,6 +28,9 @@ if (fs.existsSync(distPath)) {
 // Initialize DB if not exists
 if (!fs.existsSync(DB_FILE)) {
     fs.writeFileSync(DB_FILE, JSON.stringify({ listings: [] }, null, 2));
+}
+if (!fs.existsSync(JOBS_FILE)) {
+    fs.writeFileSync(JOBS_FILE, JSON.stringify({ jobs: [] }, null, 2));
 }
 
 // ─── RSS Feed Sources ───────────────────────────────────────────────
@@ -243,6 +248,208 @@ app.post('/api/listings', (req, res) => {
         res.status(201).json(newListing);
     } catch (e) {
         res.status(500).json({ error: e.message });
+    }
+});
+
+// ─── Job Board API ──────────────────────────────────────────────────
+
+function readJobs() {
+    if (!fs.existsSync(JOBS_FILE)) return { jobs: [] };
+    return JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
+}
+
+function writeJobs(data) {
+    fs.writeFileSync(JOBS_FILE, JSON.stringify(data, null, 2));
+}
+
+function isJobExpired(job) {
+    if (job.status !== 'approved' || !job.approvedAt) return false;
+    const approvedDate = new Date(job.approvedAt);
+    const now = new Date();
+    return (now - approvedDate) > 30 * 24 * 60 * 60 * 1000;
+}
+
+function requireAdmin(req, res, next) {
+    const key = req.headers['x-admin-key'];
+    if (key !== ADMIN_KEY) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    next();
+}
+
+const SLUG_TO_CATEGORY = {
+    'llms': 'LLMs',
+    'computer-vision': 'Computer Vision',
+    'robotics': 'Robotics',
+    'ai-research': 'AI Research',
+    'ai-tools': 'AI Tools',
+    'ai-policy': 'AI Policy',
+    'industry-news': 'Industry News',
+};
+
+// Public: list approved, non-expired jobs
+app.get('/api/jobs', (req, res) => {
+    try {
+        const data = readJobs();
+        let dirty = false;
+
+        // Auto-expire old jobs
+        data.jobs.forEach(job => {
+            if (isJobExpired(job)) {
+                job.status = 'expired';
+                dirty = true;
+            }
+        });
+        if (dirty) writeJobs(data);
+
+        let jobs = data.jobs.filter(j => j.status === 'approved');
+
+        // Filters
+        const { category, type, location, search } = req.query;
+        if (category && category !== 'all') {
+            jobs = jobs.filter(j => j.category === category);
+        }
+        if (type && type !== 'all') {
+            jobs = jobs.filter(j => j.jobType === type);
+        }
+        if (location && location !== 'all') {
+            jobs = jobs.filter(j => j.location === location);
+        }
+        if (search) {
+            const q = search.toLowerCase();
+            jobs = jobs.filter(j =>
+                j.jobTitle.toLowerCase().includes(q) ||
+                j.companyName.toLowerCase().includes(q) ||
+                j.description.toLowerCase().includes(q)
+            );
+        }
+
+        // Sort newest first
+        jobs.sort((a, b) => new Date(b.approvedAt || b.submittedAt) - new Date(a.approvedAt || a.submittedAt));
+
+        // Paginate
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
+        const total = jobs.length;
+        const start = (page - 1) * limit;
+        const paginated = jobs.slice(start, start + limit);
+
+        res.json({ jobs: paginated, total, page, totalPages: Math.ceil(total / limit) });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to fetch jobs' });
+    }
+});
+
+// Public: single job detail
+app.get('/api/jobs/:id', (req, res) => {
+    // Skip admin routes
+    if (req.params.id === 'admin') return res.status(404).json({ error: 'Not found' });
+
+    try {
+        const data = readJobs();
+        const job = data.jobs.find(j => j.id === req.params.id && j.status === 'approved');
+        if (!job) return res.status(404).json({ error: 'Job not found' });
+
+        // Check expiry
+        if (isJobExpired(job)) {
+            job.status = 'expired';
+            writeJobs(data);
+            return res.status(404).json({ error: 'Job not found' });
+        }
+
+        res.json(job);
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to fetch job' });
+    }
+});
+
+// Public: submit a new job
+app.post('/api/jobs', (req, res) => {
+    try {
+        const { companyName, jobTitle, location, city, salaryMin, salaryMax, jobType, category, description, applyUrl, companyLogoUrl, companyEmail } = req.body;
+
+        if (!companyName || !jobTitle || !description || !applyUrl || !companyEmail) {
+            return res.status(400).json({ error: 'Missing required fields: companyName, jobTitle, description, applyUrl, companyEmail' });
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(companyEmail)) {
+            return res.status(400).json({ error: 'Invalid email address' });
+        }
+
+        const data = readJobs();
+        const newJob = {
+            id: Date.now().toString(),
+            companyName: companyName.trim(),
+            jobTitle: jobTitle.trim(),
+            location: location || 'remote',
+            city: city?.trim() || '',
+            salaryMin: salaryMin ? Number(salaryMin) : null,
+            salaryMax: salaryMax ? Number(salaryMax) : null,
+            jobType: jobType || 'full-time',
+            category: category || 'ai-tools',
+            description: description.trim(),
+            applyUrl: applyUrl.trim(),
+            companyLogoUrl: companyLogoUrl?.trim() || '',
+            companyEmail: companyEmail.trim(),
+            status: 'submitted',
+            submittedAt: new Date().toISOString(),
+            approvedAt: null,
+            expiresAt: null,
+        };
+
+        data.jobs.push(newJob);
+        writeJobs(data);
+
+        console.log('New job submitted:', newJob.jobTitle, 'at', newJob.companyName);
+        res.status(201).json({ message: 'Job submitted for review', job: { id: newJob.id, jobTitle: newJob.jobTitle, status: newJob.status } });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to submit job' });
+    }
+});
+
+// Admin: list all jobs
+app.get('/api/jobs/admin/all', requireAdmin, (req, res) => {
+    try {
+        const data = readJobs();
+        res.json(data.jobs);
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to fetch jobs' });
+    }
+});
+
+// Admin: approve a job
+app.post('/api/jobs/:id/approve', requireAdmin, (req, res) => {
+    try {
+        const data = readJobs();
+        const job = data.jobs.find(j => j.id === req.params.id);
+        if (!job) return res.status(404).json({ error: 'Job not found' });
+
+        const now = new Date();
+        job.status = 'approved';
+        job.approvedAt = now.toISOString();
+        job.expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        writeJobs(data);
+
+        console.log('Job approved:', job.jobTitle, 'at', job.companyName);
+        res.json(job);
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to approve job' });
+    }
+});
+
+// Admin: reject a job
+app.post('/api/jobs/:id/reject', requireAdmin, (req, res) => {
+    try {
+        const data = readJobs();
+        const job = data.jobs.find(j => j.id === req.params.id);
+        if (!job) return res.status(404).json({ error: 'Job not found' });
+
+        job.status = 'rejected';
+        writeJobs(data);
+
+        console.log('Job rejected:', job.jobTitle, 'at', job.companyName);
+        res.json(job);
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to reject job' });
     }
 });
 

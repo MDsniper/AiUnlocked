@@ -25,6 +25,7 @@ export const Footer: React.FC = () => {
               {[
                 { name: 'Home', href: '/' },
                 { name: 'Categories', href: '/categories' },
+                { name: 'Jobs', href: '/jobs' },
                 { name: 'About', href: '/about' },
                 { name: 'Newsletter', href: '/newsletter' },
               ].map((link) => (
