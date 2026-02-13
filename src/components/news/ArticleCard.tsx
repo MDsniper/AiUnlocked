@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { ExternalLink, Clock } from 'lucide-react';
 import type { Article } from '../../types';
 import { CATEGORY_MAP } from '../../types';
@@ -18,8 +17,10 @@ export const ArticleCard: React.FC<{ article: Article }> = ({ article }) => {
   const cat = CATEGORY_MAP[article.category];
 
   return (
-    <Link
-      to={`/article/${article.id}`}
+    <a
+      href={article.sourceUrl}
+      target="_blank"
+      rel="noopener noreferrer"
       className="group block bg-[var(--card-bg)] border border-[var(--border)] rounded-xl overflow-hidden hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
     >
       {article.imageUrl && (
@@ -57,6 +58,6 @@ export const ArticleCard: React.FC<{ article: Article }> = ({ article }) => {
           <ExternalLink size={14} className="text-[var(--muted)]" />
         </div>
       </div>
-    </Link>
+    </a>
   );
 };

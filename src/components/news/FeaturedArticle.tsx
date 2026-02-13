@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { ArrowRight, Clock } from 'lucide-react';
 import type { Article } from '../../types';
 import { CATEGORY_MAP } from '../../types';
@@ -8,8 +7,10 @@ export const FeaturedArticle: React.FC<{ article: Article }> = ({ article }) => 
   const cat = CATEGORY_MAP[article.category];
 
   return (
-    <Link
-      to={`/article/${article.id}`}
+    <a
+      href={article.sourceUrl}
+      target="_blank"
+      rel="noopener noreferrer"
       className="group block relative overflow-hidden rounded-2xl border border-[var(--border)] hover:shadow-lg transition-all duration-300"
     >
       <div className="grid md:grid-cols-2">
@@ -54,6 +55,6 @@ export const FeaturedArticle: React.FC<{ article: Article }> = ({ article }) => 
           </div>
         </div>
       </div>
-    </Link>
+    </a>
   );
 };
